@@ -19,6 +19,12 @@ Instagram動画自動編集ツール
       --colors white yellow white \
       --blackbox 50,600,400,80
 
+  # 赤グローエフェクト付き
+  python edit_video.py --file input/video.mp4 \
+      --text "1行目" "2行目" "3行目" \
+      --colors white yellow red \
+      --effects none none red_glow
+
   # CTA付き
   python edit_video.py --file input/video.mp4 \
       --text "テキスト1" "テキスト2" \
@@ -70,7 +76,13 @@ def parse_args():
         "--colors", "-c",
         nargs="+",
         default=None,
-        help="各行の色 (white, yellow, #RRGGBB)。省略時: 1行目=white",
+        help="各行の色 (white, yellow, red, #RRGGBB)。省略時: 1行目=white",
+    )
+    parser.add_argument(
+        "--effects", "-e",
+        nargs="+",
+        default=None,
+        help="各行のエフェクト (none, red_glow)。省略時: none",
     )
 
     # 黒ボックス
@@ -143,12 +155,22 @@ def main():
 
     # テキスト行の構築
     colors = args.colors or []
+    effects = args.effects or []
     # デフォルト色: 交互に white, yellow
     default_colors = ["white", "yellow", "white"]
     text_lines = []
     for i, text in enumerate(args.text):
         color = colors[i] if i < len(colors) else default_colors[i % len(default_colors)]
-        text_lines.append({"text": text, "color": color})
+        line_info = {"text": text, "color": color}
+
+        # エフェクト設定
+        if i < len(effects) and effects[i] != "none":
+            line_info["effect"] = effects[i]
+        elif color.lower() == "red" and (not effects or i >= len(effects)):
+            # 色が red の場合、自動的に red_glow エフェクトを適用
+            line_info["effect"] = "red_glow"
+
+        text_lines.append(line_info)
 
     # 黒ボックスの解析
     blackboxes = None

@@ -40,8 +40,19 @@ TEXT_3LINE_CENTER_Y = [460, 560, 660]  # Y=1000, Y=800, Y=600 相当
 TEXT_LINE_SPACING = 100
 
 # テキストの影 (読みやすさのため)
-TEXT_SHADOW_OFFSET = 3
-TEXT_SHADOW_COLOR = (0, 0, 0, 180)
+TEXT_SHADOW_OFFSET = 4
+TEXT_SHADOW_COLOR = (0, 0, 0, 200)
+
+# テキストの境界線（ストローク） - 黒い太い縁取り
+TEXT_STROKE_WIDTH = 4
+TEXT_STROKE_COLOR = (0, 0, 0, 255)
+
+# === 赤エフェクトテキスト ===
+# 赤い文字にグロー（光彩）エフェクトを適用
+RED_EFFECT_COLOR = (255, 0, 0, 255)
+RED_GLOW_COLOR = (255, 0, 0, 80)    # グローの色 (半透明の赤)
+RED_GLOW_RADIUS = 8                   # グローの広がり（ピクセル）
+RED_GLOW_PASSES = 3                   # グローの重ね描き回数
 
 # === CTA (コール・トゥ・アクション) ===
 CTA_TEXT = "最新の海外AI事例を知りたい方はフォロー"

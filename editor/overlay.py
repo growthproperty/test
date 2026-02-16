@@ -1,6 +1,6 @@
 """テキスト・画像オーバーレイ生成モジュール"""
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 from . import config
 
@@ -45,6 +45,7 @@ def create_text_overlay(
 
     Args:
         lines: [{"text": "テキスト", "color": "white"}, ...]
+                各行に "effect": "red_glow" を指定すると赤グローエフェクトを適用
         canvas_size: (width, height)
         y_positions: 各行のY位置 (ピクセル)。Noneなら自動計算。
 
@@ -71,25 +72,80 @@ def create_text_overlay(
     for i, line_info in enumerate(lines):
         text = line_info["text"]
         color = line_info.get("color", config.MAIN_TEXT_DEFAULT_COLOR)
+        effect = line_info.get("effect", None)
 
         # 色名をRGBAに変換
         rgba = _color_to_rgba(color)
         shadow_rgba = config.TEXT_SHADOW_COLOR
+        stroke_w = config.TEXT_STROKE_WIDTH
+        stroke_color = config.TEXT_STROKE_COLOR
 
-        # テキスト幅を計測して中央揃え
-        bbox = draw.textbbox((0, 0), text, font=font)
+        # テキスト幅を計測して中央揃え (ストローク幅も考慮)
+        bbox = draw.textbbox(
+            (0, 0), text, font=font, stroke_width=stroke_w
+        )
         text_w = bbox[2] - bbox[0]
         x = (w - text_w) // 2
         y = y_positions[i] if i < len(y_positions) else y_positions[-1] + config.TEXT_LINE_SPACING * (i - len(y_positions) + 1)
 
-        # 影を描画 (読みやすさ向上)
-        offset = config.TEXT_SHADOW_OFFSET
-        draw.text((x + offset, y + offset), text, font=font, fill=shadow_rgba)
+        # 赤グローエフェクト
+        if effect == "red_glow":
+            _draw_red_glow(img, text, font, x, y, stroke_w)
 
-        # 本文を描画
-        draw.text((x, y), text, font=font, fill=rgba)
+        # ドロップシャドウ (読みやすさ向上)
+        offset = config.TEXT_SHADOW_OFFSET
+        draw.text(
+            (x + offset, y + offset), text, font=font,
+            fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+        )
+
+        # 本文を描画 (境界線＝ストローク付き)
+        draw.text(
+            (x, y), text, font=font,
+            fill=rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+        )
 
     return img
+
+
+def _draw_red_glow(
+    img: Image.Image,
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    x: int,
+    y: int,
+    stroke_w: int,
+) -> None:
+    """
+    赤いグロー（光彩）エフェクトをテキストの背景に描画する。
+    テキストの周囲に半透明の赤い光を広げる。
+    """
+    glow_radius = config.RED_GLOW_RADIUS
+    glow_color = config.RED_GLOW_COLOR
+    passes = config.RED_GLOW_PASSES
+
+    # グロー用の一時レイヤーを作成
+    glow_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow_layer)
+
+    # 赤いテキストを描画 (太めのストロークでグロー範囲を広げる)
+    glow_stroke = stroke_w + glow_radius
+    glow_draw.text(
+        (x, y), text, font=font,
+        fill=glow_color, stroke_width=glow_stroke, stroke_fill=glow_color
+    )
+
+    # ガウシアンブラーで光彩をぼかす (複数回重ねて強調)
+    for _ in range(passes):
+        glow_layer = glow_layer.filter(
+            ImageFilter.GaussianBlur(radius=glow_radius)
+        )
+
+    # グローレイヤーを合成
+    img.paste(Image.alpha_composite(
+        Image.new("RGBA", img.size, (0, 0, 0, 0)),
+        glow_layer
+    ), (0, 0), glow_layer)
 
 
 def create_blackbox_overlay(

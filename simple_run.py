@@ -90,18 +90,36 @@ def main():
     print("  1. 白 + 黄色 (デフォルト)")
     print("  2. すべて白")
     print("  3. すべて黄色")
-    color_choice = input("選択 (1/2/3) [1] > ").strip() or "1"
+    print("  4. 白 + 黄色 + 赤エフェクト")
+    print("  5. すべて赤エフェクト")
+    color_choice = input("選択 (1/2/3/4/5) [1] > ").strip() or "1"
 
     default_colors = ["white", "yellow", "white"]
     if color_choice == "2":
         colors = ["white"] * len(text_lines)
+        effects = [None] * len(text_lines)
     elif color_choice == "3":
         colors = ["yellow"] * len(text_lines)
+        effects = [None] * len(text_lines)
+    elif color_choice == "4":
+        color_cycle = ["white", "yellow", "red"]
+        effect_cycle = [None, None, "red_glow"]
+        colors = [color_cycle[i % len(color_cycle)] for i in range(len(text_lines))]
+        effects = [effect_cycle[i % len(effect_cycle)] for i in range(len(text_lines))]
+    elif color_choice == "5":
+        colors = ["red"] * len(text_lines)
+        effects = ["red_glow"] * len(text_lines)
     else:
         colors = [default_colors[i % len(default_colors)] for i in range(len(text_lines))]
+        effects = [None] * len(text_lines)
 
     # テキスト行の構築
-    lines = [{"text": t, "color": c} for t, c in zip(text_lines, colors)]
+    lines = []
+    for t, c, e in zip(text_lines, colors, effects):
+        line_info = {"text": t, "color": c}
+        if e:
+            line_info["effect"] = e
+        lines.append(line_info)
 
     # 出力パス
     os.makedirs("output", exist_ok=True)
