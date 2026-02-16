@@ -157,6 +157,19 @@ def parse_args():
         help="テキスト行のY座標 (ピクセル)。例: 460 560",
     )
 
+    # 元テキスト隠し
+    parser.add_argument(
+        "--hide-source-text",
+        action="store_true",
+        help="元動画の字幕/テキストを黒帯で隠す (上部に黒帯を配置)",
+    )
+    parser.add_argument(
+        "--source-text-height",
+        type=int,
+        default=None,
+        help="黒帯の高さ (ピクセル)。--hide-source-text と併用。デフォルト: 650",
+    )
+
     # 映像位置調整 (4-a)
     parser.add_argument(
         "--video-offset-y",
@@ -278,6 +291,8 @@ def main():
             crop=crop,
             logo_image=args.logo,
             video_offset_y=args.video_offset_y,
+            hide_source_text=args.hide_source_text,
+            source_text_height=args.source_text_height,
         )
         print(f"\n編集完了: {result}")
     except Exception as e:

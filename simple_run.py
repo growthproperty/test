@@ -121,6 +121,21 @@ def main():
             line_info["effect"] = e
         lines.append(line_info)
 
+    # 元テキスト隠し
+    print("\n元動画の字幕/テキストを黒帯で隠しますか？")
+    print("  1. はい (デフォルト高さ: 650px)")
+    print("  2. はい (高さを指定)")
+    print("  3. いいえ")
+    hide_choice = input("選択 (1/2/3) [1] > ").strip() or "1"
+    hide_source_text = hide_choice in ("1", "2")
+    source_text_height = None
+    if hide_choice == "2":
+        height_input = input("  黒帯の高さ (px) > ").strip()
+        try:
+            source_text_height = int(height_input)
+        except ValueError:
+            print("  数値が正しくありません。デフォルト高さを使用します。")
+
     # クロップ設定 (1-b)
     print("\n不要なロゴを切り取りますか？(クロップ)")
     print("  上下左右の切り取り率(%)を入力。例: 5,0,0,3")
@@ -179,6 +194,8 @@ def main():
             crop=crop,
             logo_image=logo_image,
             video_offset_y=video_offset_y,
+            hide_source_text=hide_source_text,
+            source_text_height=source_text_height,
         )
         print(f"\n完了！出力ファイル: {result}")
         print(f"  → output フォルダを確認してください")

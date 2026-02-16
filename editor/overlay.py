@@ -192,6 +192,35 @@ def create_logo_overlay(
     return img
 
 
+def create_source_text_mask(
+    height: int = None,
+    canvas_size: tuple[int, int] = None,
+) -> Image.Image:
+    """
+    元動画のテキスト/字幕を隠すための黒帯マスクを生成する。
+
+    キャンバス上部に黒い帯を配置し、元動画のテキストを隠しつつ
+    日本語テキストのクリーンな背景として機能する。
+
+    Args:
+        height: 黒帯の高さ (ピクセル)。Noneならconfig値を使用。
+        canvas_size: (width, height)
+
+    Returns:
+        透過PNG画像（上部が黒で不透明）
+    """
+    w = canvas_size[0] if canvas_size else config.CANVAS_WIDTH
+    h = canvas_size[1] if canvas_size else config.CANVAS_HEIGHT
+    mask_h = height if height else config.SOURCE_TEXT_MASK_HEIGHT
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 上部に黒い帯を描画
+    draw.rectangle([0, 0, w, mask_h], fill=(0, 0, 0, 255))
+
+    return img
+
+
 def create_blackbox_overlay(
     boxes: list[dict],
     canvas_size: tuple[int, int] = None,

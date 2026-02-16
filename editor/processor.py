@@ -13,6 +13,7 @@ from .overlay import (
     create_blackbox_overlay,
     create_cta_overlay,
     create_logo_overlay,
+    create_source_text_mask,
 )
 
 
@@ -29,6 +30,8 @@ def process_video(
     crop: dict = None,
     logo_image: str = None,
     video_offset_y: int = None,
+    hide_source_text: bool = False,
+    source_text_height: int = None,
 ) -> str:
     """
     動画を編集する。メインのパイプライン。
@@ -46,6 +49,8 @@ def process_video(
         crop: {"top": float, "bottom": float, "left": float, "right": float} クロップ率(%)
         logo_image: ロゴ画像パス
         video_offset_y: 映像のY軸オフセット (ピクセル)
+        hide_source_text: 元動画のテキストを黒帯で隠す
+        source_text_height: 黒帯の高さ (ピクセル, 省略時はconfig値)
 
     Returns:
         出力動画のパス
@@ -100,6 +105,15 @@ def process_video(
             temp_files.append(logo_path)
             print(f"  ロゴ: OK (スケール{config.LOGO_SCALE*100:.0f}%, 不透明度{config.LOGO_OPACITY*100:.0f}%)")
 
+        # ソーステキストマスク (元動画の字幕隠し)
+        source_mask_path = None
+        if hide_source_text:
+            mask_img = create_source_text_mask(source_text_height, canvas_size)
+            source_mask_path = _save_temp_image(mask_img, "source_mask")
+            temp_files.append(source_mask_path)
+            mask_h = source_text_height or config.SOURCE_TEXT_MASK_HEIGHT
+            print(f"  ソーステキストマスク: OK (高さ{mask_h}px)")
+
         # 黒ボックス (コメント隠し)
         blackbox_path = None
         if blackboxes:
@@ -149,6 +163,7 @@ def process_video(
             cta_path=cta_path,
             cta_start=cta_start,
             logo_path=logo_path,
+            source_mask_path=source_mask_path,
             duration=info["duration"],
         )
 
@@ -481,6 +496,7 @@ def _composite_video(
     cta_path: str = None,
     cta_start: float = None,
     logo_path: str = None,
+    source_mask_path: str = None,
     duration: float = 0,
 ):
     """
@@ -490,6 +506,15 @@ def _composite_video(
     overlay_idx = 1
     filter_parts = []
     current_stream = "[0:v]"
+
+    # ソーステキストマスク (最初に適用 → 元テキストを隠す)
+    if source_mask_path:
+        inputs.extend(["-i", source_mask_path])
+        filter_parts.append(
+            f"{current_stream}[{overlay_idx}:v]overlay=0:0[smask]"
+        )
+        current_stream = "[smask]"
+        overlay_idx += 1
 
     # 黒ボックス (常時表示)
     if blackbox_path:
