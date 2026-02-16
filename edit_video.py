@@ -157,11 +157,11 @@ def parse_args():
         help="テキスト行のY座標 (ピクセル)。例: 460 560",
     )
 
-    # 元テキスト隠し
+    # 元テキスト隠し (デフォルトON)
     parser.add_argument(
-        "--hide-source-text",
+        "--no-hide-source-text",
         action="store_true",
-        help="元動画の字幕/テキストを黒帯で隠す (上部に黒帯を配置)",
+        help="元動画テキスト隠しを無効にする (デフォルトは隠す)",
     )
     parser.add_argument(
         "--source-text-height",
@@ -291,7 +291,7 @@ def main():
             crop=crop,
             logo_image=args.logo,
             video_offset_y=args.video_offset_y,
-            hide_source_text=args.hide_source_text,
+            hide_source_text=not args.no_hide_source_text,
             source_text_height=args.source_text_height,
         )
         print(f"\n編集完了: {result}")

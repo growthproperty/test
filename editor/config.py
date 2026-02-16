@@ -15,7 +15,7 @@ CANVAS_HEIGHT = 1920
 
 # === ウォーターマーク (@business_ai_times) ===
 WATERMARK_TEXT = "@business_ai_times"
-WATERMARK_OPACITY = 0.20  # 20%
+WATERMARK_OPACITY = 0.25  # 25%
 WATERMARK_SCALE = 0.40    # 40%
 WATERMARK_FONT_SIZE = 28  # スケール適用前のベースサイズ
 # CapCut座標: X=-525, Y=1630
