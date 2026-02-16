@@ -69,14 +69,28 @@ import os
 
 # 日本語フォントのパス (利用可能なものを優先順に試す)
 FONT_PATHS = [
+    # Windows
+    "C:/Windows/Fonts/msgothic.ttc",    # MS ゴシック
+    "C:/Windows/Fonts/meiryo.ttc",      # メイリオ
+    "C:/Windows/Fonts/YuGothR.ttc",     # 游ゴシック Regular
+    "C:/Windows/Fonts/YuGothM.ttc",     # 游ゴシック Medium
+    "C:/Windows/Fonts/YuGothB.ttc",     # 游ゴシック Bold
+    # Linux
     "/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf",   # IPA Pゴシック
     "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",     # IPAゴシック
     "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
     "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    # macOS
+    "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
 ]
 
 # 英字フォント (ウォーターマーク用)
 LATIN_FONT_PATHS = [
+    # Windows
+    "C:/Windows/Fonts/arial.ttf",
+    "C:/Windows/Fonts/arialbd.ttf",
+    # Linux
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
 ]
