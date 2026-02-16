@@ -148,6 +148,50 @@ def _draw_red_glow(
     ), (0, 0), glow_layer)
 
 
+def create_logo_overlay(
+    logo_path: str,
+    canvas_size: tuple[int, int] = None,
+) -> Image.Image:
+    """
+    ロゴ画像のオーバーレイを生成する。(2-b)
+
+    ロゴをスケール・不透明度を適用してキャンバス上に配置する。
+    設定値: config.LOGO_X, LOGO_Y, LOGO_SCALE, LOGO_OPACITY
+
+    Args:
+        logo_path: ロゴ画像のファイルパス
+        canvas_size: (width, height)
+
+    Returns:
+        透過PNG画像
+    """
+    w = canvas_size[0] if canvas_size else config.CANVAS_WIDTH
+    h = canvas_size[1] if canvas_size else config.CANVAS_HEIGHT
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+
+    # ロゴ画像を読み込み
+    logo = Image.open(logo_path).convert("RGBA")
+
+    # スケール適用
+    scale = config.LOGO_SCALE
+    new_w = int(logo.width * scale)
+    new_h = int(logo.height * scale)
+    logo = logo.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+    # 不透明度を適用
+    opacity = config.LOGO_OPACITY
+    alpha = logo.split()[3]
+    alpha = alpha.point(lambda p: int(p * opacity))
+    logo.putalpha(alpha)
+
+    # 配置
+    x = config.LOGO_X
+    y = config.LOGO_Y
+    img.paste(logo, (x, y), logo)
+
+    return img
+
+
 def create_blackbox_overlay(
     boxes: list[dict],
     canvas_size: tuple[int, int] = None,

@@ -121,6 +121,39 @@ def main():
             line_info["effect"] = e
         lines.append(line_info)
 
+    # クロップ設定 (1-b)
+    print("\n不要なロゴを切り取りますか？(クロップ)")
+    print("  上下左右の切り取り率(%)を入力。例: 5,0,0,3")
+    print("  スキップする場合は空Enterで。")
+    crop_input = input("クロップ (top,bottom,left,right) > ").strip()
+    crop = None
+    if crop_input:
+        parts = crop_input.split(",")
+        if len(parts) == 4:
+            top, bottom, left, right = map(float, parts)
+            crop = {"top": top, "bottom": bottom, "left": left, "right": right}
+        else:
+            print("  形式が正しくありません。クロップをスキップします。")
+
+    # ロゴ画像 (2-b)
+    print("\nロゴ画像のパスを入力してください。")
+    print("  スキップする場合は空Enterで。")
+    logo_input = input("ロゴ画像パス > ").strip()
+    logo_image = logo_input if logo_input and os.path.exists(logo_input) else None
+    if logo_input and not logo_image:
+        print(f"  ファイルが見つかりません: {logo_input}。スキップします。")
+
+    # 映像位置調整 (4-a)
+    print("\n映像のY軸オフセットを入力してください。(正=下、負=上)")
+    print("  スキップする場合は空Enterで。")
+    offset_input = input("Y軸オフセット (px) > ").strip()
+    video_offset_y = None
+    if offset_input:
+        try:
+            video_offset_y = int(offset_input)
+        except ValueError:
+            print("  数値が正しくありません。スキップします。")
+
     # 出力パス
     os.makedirs("output", exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -143,6 +176,9 @@ def main():
             skip_cta=False,
             profile_image="assets/profile.png",
             checkmark_image="assets/checkmark.png",
+            crop=crop,
+            logo_image=logo_image,
+            video_offset_y=video_offset_y,
         )
         print(f"\n完了！出力ファイル: {result}")
         print(f"  → output フォルダを確認してください")

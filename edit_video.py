@@ -25,6 +25,22 @@ Instagram動画自動編集ツール
       --colors white yellow red \
       --effects none none red_glow
 
+  # カット編集 (5〜10秒を削除)
+  python edit_video.py --file input/video.mp4 \
+      --text "テキスト" --colors white \
+      --cut 5.0,10.0
+
+  # クロップ (上5%、右3%を切り取ってロゴを隠す)
+  python edit_video.py --file input/video.mp4 \
+      --text "テキスト" --colors white \
+      --crop 5,0,0,3
+
+  # ロゴ画像配置 + 映像位置調整
+  python edit_video.py --file input/video.mp4 \
+      --text "テキスト" --colors white \
+      --logo assets/logo.png \
+      --video-offset-y 50
+
   # CTA付き
   python edit_video.py --file input/video.mp4 \
       --text "テキスト1" "テキスト2" \
@@ -85,12 +101,34 @@ def parse_args():
         help="各行のエフェクト (none, red_glow)。省略時: none",
     )
 
+    # カット編集 (1-a)
+    parser.add_argument(
+        "--cut",
+        action="append",
+        default=None,
+        help="カットする区間: start,end (秒)。複数指定可。例: 5.0,10.0",
+    )
+
+    # クロップ (1-b)
+    parser.add_argument(
+        "--crop",
+        default=None,
+        help="クロップ率(%%): top,bottom,left,right。例: 5,0,0,3",
+    )
+
     # 黒ボックス
     parser.add_argument(
         "--blackbox", "-b",
         action="append",
         default=None,
         help="コメント隠し: x,y,w,h (複数指定可)",
+    )
+
+    # ロゴ画像 (2-b)
+    parser.add_argument(
+        "--logo",
+        default=None,
+        help="自社ロゴ画像のパス (スケール40%%, 不透明度20%%で配置)",
     )
 
     # CTA
@@ -117,6 +155,14 @@ def parse_args():
         type=int,
         default=None,
         help="テキスト行のY座標 (ピクセル)。例: 460 560",
+    )
+
+    # 映像位置調整 (4-a)
+    parser.add_argument(
+        "--video-offset-y",
+        type=int,
+        default=None,
+        help="映像のY軸オフセット (ピクセル)。正=下、負=上。例: 50",
     )
 
     # 出力
@@ -172,6 +218,31 @@ def main():
 
         text_lines.append(line_info)
 
+    # カット区間の解析 (1-a)
+    cuts = None
+    if args.cut:
+        cuts = []
+        for cut_str in args.cut:
+            parts = cut_str.split(",")
+            if len(parts) != 2:
+                print(f"エラー: --cut は start,end 形式で指定してください: {cut_str}")
+                sys.exit(1)
+            start, end = float(parts[0]), float(parts[1])
+            if start >= end:
+                print(f"エラー: --cut の開始時間は終了時間より前にしてください: {cut_str}")
+                sys.exit(1)
+            cuts.append({"start": start, "end": end})
+
+    # クロップの解析 (1-b)
+    crop = None
+    if args.crop:
+        parts = args.crop.split(",")
+        if len(parts) != 4:
+            print(f"エラー: --crop は top,bottom,left,right 形式で指定してください: {args.crop}")
+            sys.exit(1)
+        top, bottom, left, right = map(float, parts)
+        crop = {"top": top, "bottom": bottom, "left": left, "right": right}
+
     # 黒ボックスの解析
     blackboxes = None
     if args.blackbox:
@@ -203,6 +274,10 @@ def main():
             profile_image=args.profile,
             checkmark_image=args.checkmark,
             skip_cta=args.no_cta,
+            cuts=cuts,
+            crop=crop,
+            logo_image=args.logo,
+            video_offset_y=args.video_offset_y,
         )
         print(f"\n編集完了: {result}")
     except Exception as e:
