@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+input/*.mp4
+output/*.mp4
+assets/profile.png
+assets/checkmark.png
+*.tmp
