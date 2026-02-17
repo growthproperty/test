@@ -13,7 +13,6 @@ from .overlay import (
     create_blackbox_overlay,
     create_cta_overlay,
     create_logo_overlay,
-    create_source_text_mask,
 )
 
 
@@ -105,10 +104,10 @@ def process_video(
             temp_files.append(logo_path)
             print(f"  ロゴ: OK (スケール{config.LOGO_SCALE*100:.0f}%, 不透明度{config.LOGO_OPACITY*100:.0f}%)")
 
-        # ソーステキストマスク (元動画の字幕/ロゴ隠し)
-        source_mask_path = None
+        # ソーステキストマスク (drawboxで直接描画 → PNG透過の問題を回避)
+        source_mask_top_h = None
+        source_mask_bottom_y = None
         if hide_source_text:
-            # 映像がキャンバス上のどこに配置されるか計算
             eff_w, eff_h = info["width"], info["height"]
             if crop:
                 ct = crop.get("top", 0) / 100.0
@@ -121,27 +120,21 @@ def process_video(
             eff_ratio = eff_w / eff_h
             offset_y_val = video_offset_y if video_offset_y is not None else config.VIDEO_OFFSET_Y
 
-            bottom_mask_start = None
             if eff_ratio > canvas_w / canvas_h:
                 # 横長動画: 映像の上端・下端を計算
                 video_h = int(canvas_w / eff_ratio)
                 video_top = (canvas_h - video_h) // 2 + offset_y_val
                 video_bottom = video_top + video_h
-
-                # 上部マスク: 映像上端 + カバー分
                 dynamic_top = video_top + config.SOURCE_TEXT_MASK_VIDEO_COVER_TOP
-                # 下部マスク: 映像下端 - カバー分
-                bottom_mask_start = video_bottom - config.SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM
+                source_mask_bottom_y = video_bottom - config.SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM
             else:
-                # 縦長/正方形動画: 映像上端は0付近
+                # 縦長/正方形動画
                 dynamic_top = config.SOURCE_TEXT_MASK_HEIGHT
+                source_mask_bottom_y = canvas_h - config.SOURCE_TEXT_MASK_PORTRAIT_BOTTOM
 
-            mask_h = source_text_height or max(config.SOURCE_TEXT_MASK_HEIGHT, dynamic_top)
-            mask_img = create_source_text_mask(mask_h, canvas_size, bottom_start=bottom_mask_start)
-            source_mask_path = _save_temp_image(mask_img, "source_mask")
-            temp_files.append(source_mask_path)
-            bottom_info = f" + 下部マスク Y={bottom_mask_start}px〜" if bottom_mask_start else ""
-            print(f"  ソーステキストマスク: OK (上部{mask_h}px{bottom_info})")
+            source_mask_top_h = source_text_height or max(config.SOURCE_TEXT_MASK_HEIGHT, dynamic_top)
+            bottom_info = f" + 下部マスク Y={source_mask_bottom_y}px〜" if source_mask_bottom_y else ""
+            print(f"  ソーステキストマスク: OK (上部{source_mask_top_h}px{bottom_info})")
 
         # 黒ボックス (コメント隠し)
         blackbox_path = None
@@ -192,7 +185,8 @@ def process_video(
             cta_path=cta_path,
             cta_start=cta_start,
             logo_path=logo_path,
-            source_mask_path=source_mask_path,
+            source_mask_top=source_mask_top_h,
+            source_mask_bottom=source_mask_bottom_y,
             duration=info["duration"],
         )
 
@@ -525,25 +519,34 @@ def _composite_video(
     cta_path: str = None,
     cta_start: float = None,
     logo_path: str = None,
-    source_mask_path: str = None,
+    source_mask_top: int = None,
+    source_mask_bottom: int = None,
     duration: float = 0,
 ):
     """
     FFmpegで動画にすべてのオーバーレイを合成する。
+    黒帯マスクはdrawboxフィルターで直接描画（PNG透過の信頼性問題を回避）。
     """
     inputs = ["-i", video_path]
     overlay_idx = 1
     filter_parts = []
     current_stream = "[0:v]"
 
-    # ソーステキストマスク (最初に適用 → 元テキストを隠す)
-    if source_mask_path:
-        inputs.extend(["-i", source_mask_path])
-        filter_parts.append(
-            f"{current_stream}[{overlay_idx}:v]overlay=0:0[smask]"
+    # ソーステキストマスク (drawboxで直接ピクセルを黒塗り → 確実)
+    drawbox_filters = []
+    if source_mask_top:
+        drawbox_filters.append(
+            f"drawbox=x=0:y=0:w=iw:h={source_mask_top}:color=black:t=fill"
         )
-        current_stream = "[smask]"
-        overlay_idx += 1
+    if source_mask_bottom:
+        drawbox_filters.append(
+            f"drawbox=x=0:y={source_mask_bottom}:w=iw:h=ih-{source_mask_bottom}:color=black:t=fill"
+        )
+
+    if drawbox_filters:
+        chain = ",".join(drawbox_filters)
+        filter_parts.append(f"{current_stream}{chain}[masked]")
+        current_stream = "[masked]"
 
     # 黒ボックス (常時表示)
     if blackbox_path:

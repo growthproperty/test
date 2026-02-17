@@ -323,11 +323,11 @@ def create_cta_overlay(
 ) -> Image.Image:
     """
     CTA (コール・トゥ・アクション) オーバーレイを生成する。
-    プロフィール画像 + チェックマーク + フォロー文言
+    プロフィールページのスクリーンショットを上部に大きく表示 + フォロー文言
 
     Args:
-        profile_image_path: プロフィールのスクリーンショット画像パス
-        checkmark_image_path: チェックマーク画像パス
+        profile_image_path: プロフィールページのスクリーンショット画像パス
+        checkmark_image_path: 未使用 (後方互換性のため残す)
         canvas_size: (width, height)
 
     Returns:
@@ -337,41 +337,44 @@ def create_cta_overlay(
     h = canvas_size[1] if canvas_size else config.CANVAS_HEIGHT
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
 
-    padding = config.CTA_PADDING
-    cta_y = config.CTA_Y_POSITION
-    current_x = padding + 20
-
-    # プロフィール画像
+    # プロフィールスクリーンショットを上部に配置
     if profile_image_path and os.path.exists(profile_image_path):
         profile = Image.open(profile_image_path).convert("RGBA")
-        profile = profile.resize(config.CTA_PROFILE_SIZE, Image.Resampling.LANCZOS)
-        img.paste(profile, (current_x, cta_y), profile)
-        current_x += config.CTA_PROFILE_SIZE[0] + padding
 
-    # チェックマーク
-    if checkmark_image_path and os.path.exists(checkmark_image_path):
-        check = Image.open(checkmark_image_path).convert("RGBA")
-        check = check.resize(config.CTA_CHECKMARK_SIZE, Image.Resampling.LANCZOS)
-        check_y = cta_y + (config.CTA_PROFILE_SIZE[1] - config.CTA_CHECKMARK_SIZE[1]) // 2
-        img.paste(check, (current_x, check_y), check)
-        current_x += config.CTA_CHECKMARK_SIZE[0] + padding
+        # キャンバス幅にスケール (アスペクト比維持)
+        scale = w / profile.width
+        new_h = int(profile.height * scale)
 
-    # テキスト
-    font = _load_font(config.CTA_FONT_SIZE)
+        # 最大高さを制限
+        max_h = int(h * config.CTA_PROFILE_MAX_HEIGHT_RATIO)
+        if new_h > max_h:
+            new_h = max_h
+
+        profile = profile.resize((w, new_h), Image.Resampling.LANCZOS)
+        img.paste(profile, (0, config.CTA_PROFILE_Y), profile)
+
+    # CTAテキスト (中央揃え、ストローク付き)
     draw = ImageDraw.Draw(img)
-    text_y = cta_y + (config.CTA_PROFILE_SIZE[1] - config.CTA_FONT_SIZE) // 2
-    # 影
+    font = _load_font(config.CTA_FONT_SIZE)
+    text = config.CTA_TEXT
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_x = (w - text_w) // 2
+    text_y = config.CTA_TEXT_Y
+
+    # ドロップシャドウ
     draw.text(
-        (current_x + 2, text_y + 2),
-        config.CTA_TEXT,
-        font=font,
+        (text_x + 2, text_y + 2),
+        text, font=font,
         fill=(0, 0, 0, 160),
     )
+    # 本文 (ストローク付き)
     draw.text(
-        (current_x, text_y),
-        config.CTA_TEXT,
-        font=font,
+        (text_x, text_y),
+        text, font=font,
         fill=_color_to_rgba(config.CTA_TEXT_COLOR),
+        stroke_width=3,
+        stroke_fill=(0, 0, 0, 255),
     )
 
     return img

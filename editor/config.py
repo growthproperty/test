@@ -56,10 +56,11 @@ RED_GLOW_RADIUS = 8                   # グローの広がり（ピクセル）
 RED_GLOW_PASSES = 3                   # グローの重ね描き回数
 
 # === CTA (コール・トゥ・アクション) ===
-CTA_TEXT = "最新の海外AI事例を知りたい方はフォロー"
-CTA_FONT_SIZE = 28
+CTA_TEXT = "海外の最新事例を知りたい方はフォロー！"
+CTA_FONT_SIZE = 36
 CTA_TEXT_COLOR = "white"
-CTA_MIN_DURATION = 2.0    # 最低表示秒数
+CTA_TEXT_Y = 1650              # CTAテキストのY位置 (中央揃え)
+CTA_MIN_DURATION = 2.0         # 最低表示秒数
 # CTA表示タイミング: 動画尾から何秒前に開始するか
 CTA_TIMING_RULES = {
     10: 2.0,   # 10秒動画 → 残り2秒
@@ -67,11 +68,9 @@ CTA_TIMING_RULES = {
 }
 CTA_DEFAULT_RATIO = 0.15  # デフォルト: 動画の最後15%
 
-# CTA配置 (キャンバス下部)
-CTA_PROFILE_SIZE = (80, 80)     # プロフィール画像サイズ
-CTA_CHECKMARK_SIZE = (30, 30)   # チェックマークサイズ
-CTA_Y_POSITION = 1700           # キャンバス上のY位置 (ピクセル)
-CTA_PADDING = 15
+# CTA配置: プロフィールスクリーンショットを上部に表示
+CTA_PROFILE_Y = 0                      # プロフィール画像Y位置 (キャンバス上端)
+CTA_PROFILE_MAX_HEIGHT_RATIO = 0.55    # プロフィール画像最大高さ (キャンバス比率)
 
 # === カット編集 (1-a) ===
 # --cut で指定された区間をリップル削除する
@@ -102,7 +101,8 @@ VIDEO_AUTO_SCALE = True
 SOURCE_TEXT_MASK_HEIGHT = 650  # 最低限の上部マスク高さ
 # 動的計算: 映像がキャンバス上で始まるY位置より下まで黒帯を伸ばす
 SOURCE_TEXT_MASK_VIDEO_COVER_TOP = 100    # 映像上端から何px分を覆うか
-SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM = 80  # 映像下端から何px分を覆うか
+SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM = 100  # 映像下端から何px分を覆うか (横長動画)
+SOURCE_TEXT_MASK_PORTRAIT_BOTTOM = 200    # 縦長動画: キャンバス下端から200px分を覆う
 
 # === ブラックボックス (コメント隠し) ===
 BLACKBOX_COLOR = (0, 0, 0, 255)
