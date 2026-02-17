@@ -56,11 +56,14 @@ RED_GLOW_RADIUS = 8                   # グローの広がり（ピクセル）
 RED_GLOW_PASSES = 3                   # グローの重ね描き回数
 
 # === CTA (コール・トゥ・アクション) ===
-CTA_TEXT = "海外の最新事例を知りたい方はフォロー！"
-CTA_FONT_SIZE = 36
+CTA_TEXT_LINES = ["海外の最新事例を", "知りたい方はフォロー"]
+CTA_FONT_SIZE = 48
 CTA_TEXT_COLOR = "white"
-CTA_TEXT_Y = 1650              # CTAテキストのY位置 (中央揃え)
-CTA_MIN_DURATION = 2.0         # 最低表示秒数
+CTA_TEXT_STROKE_WIDTH = 5              # テキスト縁取り太さ
+CTA_TEXT_SHADOW_OFFSET = 3             # ドロップシャドウオフセット
+CTA_TEXT_MARGIN_TOP = 40               # プロフィール画像下端からテキストまでの余白
+CTA_TEXT_LINE_SPACING = 70             # テキスト行間
+CTA_MIN_DURATION = 2.0                 # 最低表示秒数
 # CTA表示タイミング: 動画尾から何秒前に開始するか
 CTA_TIMING_RULES = {
     10: 2.0,   # 10秒動画 → 残り2秒
@@ -70,7 +73,16 @@ CTA_DEFAULT_RATIO = 0.15  # デフォルト: 動画の最後15%
 
 # CTA配置: プロフィールスクリーンショットを上部に表示
 CTA_PROFILE_Y = 0                      # プロフィール画像Y位置 (キャンバス上端)
-CTA_PROFILE_MAX_HEIGHT_RATIO = 0.55    # プロフィール画像最大高さ (キャンバス比率)
+CTA_PROFILE_MAX_HEIGHT_RATIO = 0.60    # プロフィール画像最大高さ (キャンバス比率)
+
+# フォローボタン赤丸 (プロフィール画像上に赤い楕円を描画)
+CTA_FOLLOW_CIRCLE_ENABLED = True
+CTA_FOLLOW_CIRCLE_X_RATIO = 0.33      # フォローボタン中心X (プロフィール幅に対する比率)
+CTA_FOLLOW_CIRCLE_Y_RATIO = 0.42      # フォローボタン中心Y (プロフィール高さに対する比率)
+CTA_FOLLOW_CIRCLE_RX = 120            # 楕円の水平半径 (ピクセル)
+CTA_FOLLOW_CIRCLE_RY = 28             # 楕円の垂直半径 (ピクセル)
+CTA_FOLLOW_CIRCLE_COLOR = (255, 0, 0, 255)  # 赤
+CTA_FOLLOW_CIRCLE_WIDTH = 6           # 線の太さ
 
 # === カット編集 (1-a) ===
 # --cut で指定された区間をリップル削除する
@@ -101,8 +113,8 @@ VIDEO_AUTO_SCALE = True
 SOURCE_TEXT_MASK_HEIGHT = 650  # 最低限の上部マスク高さ
 # 動的計算: 映像がキャンバス上で始まるY位置より下まで黒帯を伸ばす
 SOURCE_TEXT_MASK_VIDEO_COVER_TOP = 100    # 映像上端から何px分を覆うか
-SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM = 100  # 映像下端から何px分を覆うか (横長動画)
-SOURCE_TEXT_MASK_PORTRAIT_BOTTOM = 200    # 縦長動画: キャンバス下端から200px分を覆う
+SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM = 200  # 映像下端から何px分を覆うか (横長動画・ロゴ隠し)
+SOURCE_TEXT_MASK_PORTRAIT_BOTTOM = 400    # 縦長動画: キャンバス下端から400px分を覆う (ロゴ隠し)
 
 # === ブラックボックス (コメント隠し) ===
 BLACKBOX_COLOR = (0, 0, 0, 255)

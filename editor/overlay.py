@@ -323,7 +323,7 @@ def create_cta_overlay(
 ) -> Image.Image:
     """
     CTA (コール・トゥ・アクション) オーバーレイを生成する。
-    プロフィールページのスクリーンショットを上部に大きく表示 + フォロー文言
+    プロフィールページのスクリーンショット + フォローボタン赤丸 + フォロー文言
 
     Args:
         profile_image_path: プロフィールページのスクリーンショット画像パス
@@ -336,6 +336,8 @@ def create_cta_overlay(
     w = canvas_size[0] if canvas_size else config.CANVAS_WIDTH
     h = canvas_size[1] if canvas_size else config.CANVAS_HEIGHT
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+
+    profile_bottom = 0
 
     # プロフィールスクリーンショットを上部に配置
     if profile_image_path and os.path.exists(profile_image_path):
@@ -352,30 +354,61 @@ def create_cta_overlay(
 
         profile = profile.resize((w, new_h), Image.Resampling.LANCZOS)
         img.paste(profile, (0, config.CTA_PROFILE_Y), profile)
+        profile_bottom = config.CTA_PROFILE_Y + new_h
 
-    # CTAテキスト (中央揃え、ストローク付き)
+        # フォローボタンに赤丸を描画
+        if config.CTA_FOLLOW_CIRCLE_ENABLED:
+            draw = ImageDraw.Draw(img)
+            cx = int(w * config.CTA_FOLLOW_CIRCLE_X_RATIO)
+            cy = config.CTA_PROFILE_Y + int(new_h * config.CTA_FOLLOW_CIRCLE_Y_RATIO)
+            rx = config.CTA_FOLLOW_CIRCLE_RX
+            ry = config.CTA_FOLLOW_CIRCLE_RY
+            draw.ellipse(
+                [cx - rx, cy - ry, cx + rx, cy + ry],
+                outline=config.CTA_FOLLOW_CIRCLE_COLOR,
+                width=config.CTA_FOLLOW_CIRCLE_WIDTH,
+            )
+
+    # プロフィール画像の下を黒背景で埋める (テキスト読みやすさのため)
     draw = ImageDraw.Draw(img)
-    font = _load_font(config.CTA_FONT_SIZE)
-    text = config.CTA_TEXT
-    bbox = draw.textbbox((0, 0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_x = (w - text_w) // 2
-    text_y = config.CTA_TEXT_Y
+    if profile_bottom > 0:
+        draw.rectangle([0, profile_bottom, w, h], fill=(0, 0, 0, 230))
 
-    # ドロップシャドウ
-    draw.text(
-        (text_x + 2, text_y + 2),
-        text, font=font,
-        fill=(0, 0, 0, 160),
-    )
-    # 本文 (ストローク付き)
-    draw.text(
-        (text_x, text_y),
-        text, font=font,
-        fill=_color_to_rgba(config.CTA_TEXT_COLOR),
-        stroke_width=3,
-        stroke_fill=(0, 0, 0, 255),
-    )
+    # CTAテキスト (プロフィール画像の真下に配置、中央揃え)
+    font = _load_font(config.CTA_FONT_SIZE)
+    text_lines = config.CTA_TEXT_LINES
+    shadow_off = config.CTA_TEXT_SHADOW_OFFSET
+    stroke_w = config.CTA_TEXT_STROKE_WIDTH
+
+    if profile_bottom > 0:
+        text_start_y = profile_bottom + config.CTA_TEXT_MARGIN_TOP
+    else:
+        # プロフィール画像なし: キャンバス中央にテキスト配置
+        total_h = len(text_lines) * config.CTA_TEXT_LINE_SPACING
+        text_start_y = (h - total_h) // 2
+
+    for i, text in enumerate(text_lines):
+        text_y = text_start_y + i * config.CTA_TEXT_LINE_SPACING
+        bbox = draw.textbbox((0, 0), text, font=font, stroke_width=stroke_w)
+        text_w = bbox[2] - bbox[0]
+        text_x = (w - text_w) // 2
+
+        # ドロップシャドウ
+        draw.text(
+            (text_x + shadow_off, text_y + shadow_off),
+            text, font=font,
+            fill=(0, 0, 0, 180),
+            stroke_width=stroke_w,
+            stroke_fill=(0, 0, 0, 180),
+        )
+        # 本文 (ストローク付き)
+        draw.text(
+            (text_x, text_y),
+            text, font=font,
+            fill=_color_to_rgba(config.CTA_TEXT_COLOR),
+            stroke_width=stroke_w,
+            stroke_fill=(0, 0, 0, 255),
+        )
 
     return img
 
