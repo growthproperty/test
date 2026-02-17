@@ -151,7 +151,13 @@ def parse_args():
     parser.add_argument(
         "--no-cta",
         action="store_true",
-        help="CTAを省略する",
+        default=True,
+        help="CTAを省略する (デフォルト: 省略)",
+    )
+    parser.add_argument(
+        "--cta",
+        action="store_true",
+        help="CTAを表示する (デフォルトではCTA無し)",
     )
 
     # テキスト位置のカスタマイズ
@@ -292,7 +298,7 @@ def main():
             y_positions=args.y_positions,
             profile_image=args.profile,
             checkmark_image=args.checkmark,
-            skip_cta=args.no_cta,
+            skip_cta=not args.cta,
             cuts=cuts,
             crop=crop,
             logo_image=args.logo,

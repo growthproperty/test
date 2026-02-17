@@ -29,18 +29,18 @@ MAIN_TEXT_DEFAULT_COLOR = "white"
 MAIN_TEXT_ACCENT_COLOR = "#FFD700"  # 黄色
 
 # テキスト位置 (ピクセル座標)
-# 最終行が動画に近くなるよう配置 (行間200px)
+# 黒帯 (0〜650px) の下寄りに配置し、動画との間隔を詰める
 # 1行構成
-TEXT_1LINE_Y = [800]
+TEXT_1LINE_Y = [500]
 # 2行構成 (標準)
-TEXT_2LINE_Y = [600, 800]
+TEXT_2LINE_Y = [400, 530]
 # 3行構成
-TEXT_3LINE_Y = [600, 800, 1000]
+TEXT_3LINE_Y = [270, 400, 530]
 # 3行構成 (視点が中央の場合)
-TEXT_3LINE_CENTER_Y = [600, 800, 1000]
+TEXT_3LINE_CENTER_Y = [270, 400, 530]
 
 # テキスト行間 (4行以上のフォールバック用)
-TEXT_LINE_SPACING = 200
+TEXT_LINE_SPACING = 130
 
 # テキストの影 (読みやすさのため)
 TEXT_SHADOW_OFFSET = 4
