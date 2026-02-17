@@ -24,27 +24,28 @@ WATERMARK_X = 15   # キャンバス左端近く
 WATERMARK_Y = 50   # キャンバス上部
 
 # === メインテキスト ===
-MAIN_TEXT_FONT_SIZE = 52  # スケール65%を反映したサイズ
+MAIN_TEXT_FONT_SIZE = 68  # 参考画像に合わせたサイズ
 MAIN_TEXT_DEFAULT_COLOR = "white"
 MAIN_TEXT_ACCENT_COLOR = "#FFD700"  # 黄色
 
-# テキスト位置 (ピクセル座標 - キャンバス中央基準のY位置)
+# テキスト位置 (ピクセル座標 - 黒帯エリア内で中央寄せ)
+# 黒帯 (0〜650px) 内でテキストを中央配置
 # 2行構成 (標準)
-TEXT_2LINE_Y = [460, 560]       # Y=1000, Y=800 相当
+TEXT_2LINE_Y = [300, 410]
 # 3行構成 (横長動画)
-TEXT_3LINE_Y = [360, 460, 560]  # Y=1200, Y=1000, Y=800 相当
+TEXT_3LINE_Y = [230, 340, 450]
 # 3行構成 (視点が中央の場合)
-TEXT_3LINE_CENTER_Y = [460, 560, 660]  # Y=1000, Y=800, Y=600 相当
+TEXT_3LINE_CENTER_Y = [330, 440, 550]
 
 # テキスト行間
-TEXT_LINE_SPACING = 100
+TEXT_LINE_SPACING = 110
 
 # テキストの影 (読みやすさのため)
 TEXT_SHADOW_OFFSET = 4
 TEXT_SHADOW_COLOR = (0, 0, 0, 200)
 
 # テキストの境界線（ストローク） - 黒い太い縁取り
-TEXT_STROKE_WIDTH = 4
+TEXT_STROKE_WIDTH = 7
 TEXT_STROKE_COLOR = (0, 0, 0, 255)
 
 # === 赤エフェクトテキスト ===
@@ -98,7 +99,7 @@ VIDEO_AUTO_SCALE = True
 
 # === ソーステキストマスク (元動画の字幕/テキスト隠し) ===
 # キャンバス上部に黒帯を配置して元動画のテキストを隠す
-# テキスト行 (Y=360〜560) + フォントサイズ分をカバーする高さ
+# テキスト行 (Y=230〜450) + フォントサイズ分をカバーする高さ
 SOURCE_TEXT_MASK_HEIGHT = 650  # デフォルト: 上部650px
 
 # === ブラックボックス (コメント隠し) ===

@@ -1,5 +1,6 @@
 """テキスト・画像オーバーレイ生成モジュール"""
 
+import re
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 from . import config
@@ -9,6 +10,48 @@ def _load_font(size: int, prefer_latin: bool = False) -> ImageFont.FreeTypeFont:
     """フォントをロードする"""
     font_path = config.get_font_path(prefer_latin=prefer_latin)
     return ImageFont.truetype(font_path, size)
+
+
+def _parse_inline_colors(text: str, default_color: str) -> list[dict]:
+    """
+    インラインカラータグを解析してセグメントに分割する。
+
+    書式: {red}衝撃映像{/}がこちら
+      → [{"text": "衝撃映像", "color": "red"}, {"text": "がこちら", "color": default_color}]
+
+    対応色: red, yellow, white, または #RRGGBB 形式
+    タグがない場合は全テキストを default_color で返す。
+    """
+    pattern = r"\{(\w+(?:#[0-9A-Fa-f]{6})?)\}(.*?)\{/\}"
+    segments = []
+    last_end = 0
+
+    for match in re.finditer(pattern, text):
+        # タグ前のテキスト
+        if match.start() > last_end:
+            before = text[last_end:match.start()]
+            if before:
+                segments.append({"text": before, "color": default_color})
+        # タグ内のテキスト
+        segments.append({"text": match.group(2), "color": match.group(1)})
+        last_end = match.end()
+
+    # タグ後の残りテキスト
+    if last_end < len(text):
+        remaining = text[last_end:]
+        if remaining:
+            segments.append({"text": remaining, "color": default_color})
+
+    # タグなしの場合
+    if not segments:
+        segments = [{"text": text, "color": default_color}]
+
+    return segments
+
+
+def strip_inline_tags(text: str) -> str:
+    """インラインカラータグを除去してプレーンテキストを返す"""
+    return re.sub(r"\{(\w+(?:#[0-9A-Fa-f]{6})?)\}(.*?)\{/\}", r"\2", text)
 
 
 def create_watermark_image() -> Image.Image:
@@ -69,41 +112,58 @@ def create_text_overlay(
         else:
             y_positions = config.TEXT_3LINE_Y
 
+    stroke_w = config.TEXT_STROKE_WIDTH
+    stroke_color = config.TEXT_STROKE_COLOR
+    shadow_rgba = config.TEXT_SHADOW_COLOR
+    offset = config.TEXT_SHADOW_OFFSET
+
     for i, line_info in enumerate(lines):
         text = line_info["text"]
-        color = line_info.get("color", config.MAIN_TEXT_DEFAULT_COLOR)
+        default_color = line_info.get("color", config.MAIN_TEXT_DEFAULT_COLOR)
         effect = line_info.get("effect", None)
 
-        # 色名をRGBAに変換
-        rgba = _color_to_rgba(color)
-        shadow_rgba = config.TEXT_SHADOW_COLOR
-        stroke_w = config.TEXT_STROKE_WIDTH
-        stroke_color = config.TEXT_STROKE_COLOR
+        # インラインカラータグを解析してセグメントに分割
+        segments = _parse_inline_colors(text, default_color)
 
-        # テキスト幅を計測して中央揃え (ストローク幅も考慮)
-        bbox = draw.textbbox(
-            (0, 0), text, font=font, stroke_width=stroke_w
-        )
-        text_w = bbox[2] - bbox[0]
-        x = (w - text_w) // 2
+        # 各セグメントの幅を計測
+        seg_widths = []
+        for seg in segments:
+            bbox = draw.textbbox(
+                (0, 0), seg["text"], font=font, stroke_width=stroke_w
+            )
+            seg_widths.append(bbox[2] - bbox[0])
+
+        total_w = sum(seg_widths)
+        current_x = (w - total_w) // 2
         y = y_positions[i] if i < len(y_positions) else y_positions[-1] + config.TEXT_LINE_SPACING * (i - len(y_positions) + 1)
 
-        # 赤グローエフェクト
-        if effect == "red_glow":
-            _draw_red_glow(img, text, font, x, y, stroke_w)
+        # セグメントごとに描画
+        for seg_idx, seg in enumerate(segments):
+            seg_text = seg["text"]
+            seg_color = seg["color"]
+            seg_rgba = _color_to_rgba(seg_color)
+            seg_x = current_x
 
-        # ドロップシャドウ (読みやすさ向上)
-        offset = config.TEXT_SHADOW_OFFSET
-        draw.text(
-            (x + offset, y + offset), text, font=font,
-            fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
-        )
+            # 赤グローエフェクト (行レベルまたはセグメント色が赤)
+            is_red_seg = seg_color.lower() == "red"
+            if is_red_seg or (effect == "red_glow" and len(segments) == 1):
+                _draw_red_glow(img, seg_text, font, seg_x, y, stroke_w)
+                # drawを再取得 (glow合成後)
+                draw = ImageDraw.Draw(img)
 
-        # 本文を描画 (境界線＝ストローク付き)
-        draw.text(
-            (x, y), text, font=font,
-            fill=rgba, stroke_width=stroke_w, stroke_fill=stroke_color
-        )
+            # ドロップシャドウ
+            draw.text(
+                (seg_x + offset, y + offset), seg_text, font=font,
+                fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+            )
+
+            # 本文を描画 (境界線＝ストローク付き)
+            draw.text(
+                (seg_x, y), seg_text, font=font,
+                fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+            )
+
+            current_x += seg_widths[seg_idx]
 
     return img
 

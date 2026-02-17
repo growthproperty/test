@@ -25,6 +25,12 @@ Instagram動画自動編集ツール
       --colors white yellow red \
       --effects none none red_glow
 
+  # インラインカラー (1行内で色を変える)
+  # {red}...{/} で囲むとその部分だけ赤色+グロー
+  python edit_video.py --file input/video.mp4 \
+      --text "中国vsアメリカ" "ロボットかバク宙する" "{red}衝撃映像{/}がこちら" \
+      --colors red white white
+
   # カット編集 (5〜10秒を削除)
   python edit_video.py --file input/video.mp4 \
       --text "テキスト" --colors white \
