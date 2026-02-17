@@ -105,14 +105,43 @@ def process_video(
             temp_files.append(logo_path)
             print(f"  ロゴ: OK (スケール{config.LOGO_SCALE*100:.0f}%, 不透明度{config.LOGO_OPACITY*100:.0f}%)")
 
-        # ソーステキストマスク (元動画の字幕隠し)
+        # ソーステキストマスク (元動画の字幕/ロゴ隠し)
         source_mask_path = None
         if hide_source_text:
-            mask_img = create_source_text_mask(source_text_height, canvas_size)
+            # 映像がキャンバス上のどこに配置されるか計算
+            eff_w, eff_h = info["width"], info["height"]
+            if crop:
+                ct = crop.get("top", 0) / 100.0
+                cb = crop.get("bottom", 0) / 100.0
+                cl = crop.get("left", 0) / 100.0
+                cr = crop.get("right", 0) / 100.0
+                eff_w = int(eff_w * (1.0 - cl - cr))
+                eff_h = int(eff_h * (1.0 - ct - cb))
+
+            eff_ratio = eff_w / eff_h
+            offset_y_val = video_offset_y if video_offset_y is not None else config.VIDEO_OFFSET_Y
+
+            bottom_mask_start = None
+            if eff_ratio > canvas_w / canvas_h:
+                # 横長動画: 映像の上端・下端を計算
+                video_h = int(canvas_w / eff_ratio)
+                video_top = (canvas_h - video_h) // 2 + offset_y_val
+                video_bottom = video_top + video_h
+
+                # 上部マスク: 映像上端 + カバー分
+                dynamic_top = video_top + config.SOURCE_TEXT_MASK_VIDEO_COVER_TOP
+                # 下部マスク: 映像下端 - カバー分
+                bottom_mask_start = video_bottom - config.SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM
+            else:
+                # 縦長/正方形動画: 映像上端は0付近
+                dynamic_top = config.SOURCE_TEXT_MASK_HEIGHT
+
+            mask_h = source_text_height or max(config.SOURCE_TEXT_MASK_HEIGHT, dynamic_top)
+            mask_img = create_source_text_mask(mask_h, canvas_size, bottom_start=bottom_mask_start)
             source_mask_path = _save_temp_image(mask_img, "source_mask")
             temp_files.append(source_mask_path)
-            mask_h = source_text_height or config.SOURCE_TEXT_MASK_HEIGHT
-            print(f"  ソーステキストマスク: OK (高さ{mask_h}px)")
+            bottom_info = f" + 下部マスク Y={bottom_mask_start}px〜" if bottom_mask_start else ""
+            print(f"  ソーステキストマスク: OK (上部{mask_h}px{bottom_info})")
 
         # 黒ボックス (コメント隠し)
         blackbox_path = None

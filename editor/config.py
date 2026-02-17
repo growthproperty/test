@@ -16,8 +16,8 @@ CANVAS_HEIGHT = 1920
 # === ウォーターマーク (@business_ai_times) ===
 WATERMARK_TEXT = "@business_ai_times"
 WATERMARK_OPACITY = 0.25  # 25%
-WATERMARK_SCALE = 0.40    # 40%
-WATERMARK_FONT_SIZE = 28  # スケール適用前のベースサイズ
+WATERMARK_SCALE = 0.50    # 50%
+WATERMARK_FONT_SIZE = 52  # スケール適用前のベースサイズ
 # CapCut座標: X=-525, Y=1630
 # → 左上寄り、上部に配置
 WATERMARK_X = 15   # キャンバス左端近く
@@ -98,9 +98,11 @@ VIDEO_OFFSET_Y = 0
 VIDEO_AUTO_SCALE = True
 
 # === ソーステキストマスク (元動画の字幕/テキスト隠し) ===
-# キャンバス上部に黒帯を配置して元動画のテキストを隠す
-# テキスト行 (Y=230〜450) + フォントサイズ分をカバーする高さ
-SOURCE_TEXT_MASK_HEIGHT = 650  # デフォルト: 上部650px
+# キャンバス上部+下部に黒帯を配置して元動画のテキスト/ロゴを隠す
+SOURCE_TEXT_MASK_HEIGHT = 650  # 最低限の上部マスク高さ
+# 動的計算: 映像がキャンバス上で始まるY位置より下まで黒帯を伸ばす
+SOURCE_TEXT_MASK_VIDEO_COVER_TOP = 100    # 映像上端から何px分を覆うか
+SOURCE_TEXT_MASK_VIDEO_COVER_BOTTOM = 80  # 映像下端から何px分を覆うか
 
 # === ブラックボックス (コメント隠し) ===
 BLACKBOX_COLOR = (0, 0, 0, 255)
