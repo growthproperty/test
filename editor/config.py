@@ -28,17 +28,19 @@ MAIN_TEXT_FONT_SIZE = 68  # 参考画像に合わせたサイズ
 MAIN_TEXT_DEFAULT_COLOR = "white"
 MAIN_TEXT_ACCENT_COLOR = "#FFD700"  # 黄色
 
-# テキスト位置 (ピクセル座標 - 黒帯エリア内で中央寄せ)
-# 黒帯 (0〜650px) 内でテキストを中央配置
+# テキスト位置 (ピクセル座標)
+# 最終行が動画に近くなるよう配置 (行間200px)
+# 1行構成
+TEXT_1LINE_Y = [800]
 # 2行構成 (標準)
-TEXT_2LINE_Y = [300, 410]
-# 3行構成 (横長動画)
-TEXT_3LINE_Y = [230, 340, 450]
+TEXT_2LINE_Y = [600, 800]
+# 3行構成
+TEXT_3LINE_Y = [600, 800, 1000]
 # 3行構成 (視点が中央の場合)
-TEXT_3LINE_CENTER_Y = [330, 440, 550]
+TEXT_3LINE_CENTER_Y = [600, 800, 1000]
 
-# テキスト行間
-TEXT_LINE_SPACING = 110
+# テキスト行間 (4行以上のフォールバック用)
+TEXT_LINE_SPACING = 200
 
 # テキストの影 (読みやすさのため)
 TEXT_SHADOW_OFFSET = 4
@@ -57,12 +59,12 @@ RED_GLOW_PASSES = 3                   # グローの重ね描き回数
 
 # === CTA (コール・トゥ・アクション) ===
 CTA_TEXT_LINES = ["海外の最新事例を", "知りたい方はフォロー"]
-CTA_FONT_SIZE = 48
+CTA_FONT_SIZE = 68                     # メインテキストと同サイズ
 CTA_TEXT_COLOR = "white"
-CTA_TEXT_STROKE_WIDTH = 5              # テキスト縁取り太さ
-CTA_TEXT_SHADOW_OFFSET = 3             # ドロップシャドウオフセット
+CTA_TEXT_STROKE_WIDTH = 7              # メインテキストと同じ縁取り
+CTA_TEXT_SHADOW_OFFSET = 4             # メインテキストと同じ影
 CTA_TEXT_MARGIN_TOP = 40               # プロフィール画像下端からテキストまでの余白
-CTA_TEXT_LINE_SPACING = 70             # テキスト行間
+CTA_TEXT_LINE_SPACING = 110            # テキスト行間
 CTA_MIN_DURATION = 2.0                 # 最低表示秒数
 # CTA表示タイミング: 動画尾から何秒前に開始するか
 CTA_TIMING_RULES = {
@@ -73,10 +75,10 @@ CTA_DEFAULT_RATIO = 0.15  # デフォルト: 動画の最後15%
 
 # CTA配置: プロフィールスクリーンショットを上部に表示
 CTA_PROFILE_Y = 0                      # プロフィール画像Y位置 (キャンバス上端)
-CTA_PROFILE_MAX_HEIGHT_RATIO = 0.60    # プロフィール画像最大高さ (キャンバス比率)
+CTA_PROFILE_MAX_HEIGHT_RATIO = 0.40    # プロフィール画像最大高さ (キャンバス比率)
 
 # フォローボタン赤丸 (プロフィール画像上に赤い楕円を描画)
-CTA_FOLLOW_CIRCLE_ENABLED = True
+CTA_FOLLOW_CIRCLE_ENABLED = False       # 赤丸は不要
 CTA_FOLLOW_CIRCLE_X_RATIO = 0.33      # フォローボタン中心X (プロフィール幅に対する比率)
 CTA_FOLLOW_CIRCLE_Y_RATIO = 0.42      # フォローボタン中心Y (プロフィール高さに対する比率)
 CTA_FOLLOW_CIRCLE_RX = 120            # 楕円の水平半径 (ピクセル)

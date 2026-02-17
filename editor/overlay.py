@@ -106,11 +106,14 @@ def create_text_overlay(
     # Y位置の決定
     if y_positions is None:
         if num_lines == 1:
-            y_positions = [config.TEXT_2LINE_Y[0]]
+            y_positions = config.TEXT_1LINE_Y
         elif num_lines == 2:
             y_positions = config.TEXT_2LINE_Y
-        else:
+        elif num_lines == 3:
             y_positions = config.TEXT_3LINE_Y
+        else:
+            # 4行以上: 1行目をY=600から開始、200px間隔
+            y_positions = [600 + i * config.TEXT_LINE_SPACING for i in range(num_lines)]
 
     stroke_w = config.TEXT_STROKE_WIDTH
     stroke_color = config.TEXT_STROKE_COLOR
