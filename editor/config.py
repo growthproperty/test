@@ -24,7 +24,7 @@ WATERMARK_X = 15   # キャンバス左端近く
 WATERMARK_Y = 50   # キャンバス上部
 
 # === メインテキスト ===
-MAIN_TEXT_FONT_SIZE = 78  # 太め・参考画像に合わせたサイズ
+MAIN_TEXT_FONT_SIZE = 68  # 参考画像に合わせたサイズ
 MAIN_TEXT_DEFAULT_COLOR = "white"
 MAIN_TEXT_ACCENT_COLOR = "#FFD700"  # 黄色
 
