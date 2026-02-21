@@ -154,17 +154,36 @@ def create_text_overlay(
                 # drawを再取得 (glow合成後)
                 draw = ImageDraw.Draw(img)
 
-            # ドロップシャドウ
-            draw.text(
-                (seg_x + offset, y + offset), seg_text, font=font,
-                fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
-            )
+            # ドロップシャドウ (太字化に合わせて重ね描き)
+            _bold_extra = getattr(config, "TEXT_BOLD_EXTRA", 0)
+            if _bold_extra > 0:
+                for dx in range(-_bold_extra, _bold_extra + 1):
+                    for dy in range(-_bold_extra, _bold_extra + 1):
+                        draw.text(
+                            (seg_x + offset + dx, y + offset + dy), seg_text, font=font,
+                            fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+                        )
+            else:
+                draw.text(
+                    (seg_x + offset, y + offset), seg_text, font=font,
+                    fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+                )
 
-            # 本文を描画 (境界線＝ストローク付き)
-            draw.text(
-                (seg_x, y), seg_text, font=font,
-                fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
-            )
+            # 本文を描画 (境界線＝ストローク付き + 重ね描きで太字化)
+            bold_extra = getattr(config, "TEXT_BOLD_EXTRA", 0)
+            if bold_extra > 0:
+                # 複数方向にオフセットして描画し、文字を太くする
+                for dx in range(-bold_extra, bold_extra + 1):
+                    for dy in range(-bold_extra, bold_extra + 1):
+                        draw.text(
+                            (seg_x + dx, y + dy), seg_text, font=font,
+                            fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                        )
+            else:
+                draw.text(
+                    (seg_x, y), seg_text, font=font,
+                    fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                )
 
             current_x += seg_widths[seg_idx]
 
@@ -404,14 +423,27 @@ def create_cta_overlay(
             stroke_width=stroke_w,
             stroke_fill=(0, 0, 0, 180),
         )
-        # 本文 (ストローク付き)
-        draw.text(
-            (text_x, text_y),
-            text, font=font,
-            fill=_color_to_rgba(config.CTA_TEXT_COLOR),
-            stroke_width=stroke_w,
-            stroke_fill=(0, 0, 0, 255),
-        )
+        # 本文 (ストローク付き + 重ね描きで太字化)
+        bold_extra = getattr(config, "TEXT_BOLD_EXTRA", 0)
+        fill_color = _color_to_rgba(config.CTA_TEXT_COLOR)
+        if bold_extra > 0:
+            for dx in range(-bold_extra, bold_extra + 1):
+                for dy in range(-bold_extra, bold_extra + 1):
+                    draw.text(
+                        (text_x + dx, text_y + dy),
+                        text, font=font,
+                        fill=fill_color,
+                        stroke_width=stroke_w,
+                        stroke_fill=(0, 0, 0, 255),
+                    )
+        else:
+            draw.text(
+                (text_x, text_y),
+                text, font=font,
+                fill=fill_color,
+                stroke_width=stroke_w,
+                stroke_fill=(0, 0, 0, 255),
+            )
 
     return img
 

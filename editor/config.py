@@ -47,7 +47,9 @@ TEXT_SHADOW_OFFSET = 5
 TEXT_SHADOW_COLOR = (0, 0, 0, 200)
 
 # テキストの境界線（ストローク） - 黒い太い縁取り
-TEXT_STROKE_WIDTH = 20
+TEXT_STROKE_WIDTH = 25
+# 文字を太くする追加オフセット描画の範囲 (0=無効)
+TEXT_BOLD_EXTRA = 3
 TEXT_STROKE_COLOR = (0, 0, 0, 255)
 
 # === 赤エフェクトテキスト ===
@@ -61,7 +63,7 @@ RED_GLOW_PASSES = 3                   # グローの重ね描き回数
 CTA_TEXT_LINES = ["海外の最新事例を", "知りたい方はフォロー"]
 CTA_FONT_SIZE = 68                     # メインテキストと同サイズ
 CTA_TEXT_COLOR = "white"
-CTA_TEXT_STROKE_WIDTH = 20             # メインテキストと同じ縁取り
+CTA_TEXT_STROKE_WIDTH = 25             # メインテキストと同じ縁取り
 CTA_TEXT_SHADOW_OFFSET = 4             # メインテキストと同じ影
 CTA_TEXT_MARGIN_TOP = 40               # プロフィール画像下端からテキストまでの余白
 CTA_TEXT_LINE_SPACING = 110            # テキスト行間
