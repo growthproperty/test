@@ -133,7 +133,8 @@ FONT_PATHS = [
     "C:/Windows/Fonts/meiryo.ttc",      # メイリオ
     "C:/Windows/Fonts/msgothic.ttc",    # MS ゴシック
     "C:/Windows/Fonts/YuGothR.ttc",     # 游ゴシック Regular
-    # Linux
+    # Linux (太字を優先)
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",  # Noto Sans CJK Bold
     "/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf",   # IPA Pゴシック
     "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",     # IPAゴシック
     "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
