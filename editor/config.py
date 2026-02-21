@@ -24,7 +24,7 @@ WATERMARK_X = 15   # キャンバス左端近く
 WATERMARK_Y = 50   # キャンバス上部
 
 # === メインテキスト ===
-MAIN_TEXT_FONT_SIZE = 68  # 参考画像に合わせたサイズ
+MAIN_TEXT_FONT_SIZE = 78  # 太め・参考画像に合わせたサイズ
 MAIN_TEXT_DEFAULT_COLOR = "white"
 MAIN_TEXT_ACCENT_COLOR = "#FFD700"  # 黄色
 
@@ -43,11 +43,11 @@ TEXT_3LINE_CENTER_Y = [270, 400, 530]
 TEXT_LINE_SPACING = 130
 
 # テキストの影 (読みやすさのため)
-TEXT_SHADOW_OFFSET = 4
+TEXT_SHADOW_OFFSET = 5
 TEXT_SHADOW_COLOR = (0, 0, 0, 200)
 
 # テキストの境界線（ストローク） - 黒い太い縁取り
-TEXT_STROKE_WIDTH = 7
+TEXT_STROKE_WIDTH = 14
 TEXT_STROKE_COLOR = (0, 0, 0, 255)
 
 # === 赤エフェクトテキスト ===
@@ -61,7 +61,7 @@ RED_GLOW_PASSES = 3                   # グローの重ね描き回数
 CTA_TEXT_LINES = ["海外の最新事例を", "知りたい方はフォロー"]
 CTA_FONT_SIZE = 68                     # メインテキストと同サイズ
 CTA_TEXT_COLOR = "white"
-CTA_TEXT_STROKE_WIDTH = 7              # メインテキストと同じ縁取り
+CTA_TEXT_STROKE_WIDTH = 14             # メインテキストと同じ縁取り
 CTA_TEXT_SHADOW_OFFSET = 4             # メインテキストと同じ影
 CTA_TEXT_MARGIN_TOP = 40               # プロフィール画像下端からテキストまでの余白
 CTA_TEXT_LINE_SPACING = 110            # テキスト行間
@@ -126,12 +126,13 @@ import os
 
 # 日本語フォントのパス (利用可能なものを優先順に試す)
 FONT_PATHS = [
-    # Windows
-    "C:/Windows/Fonts/msgothic.ttc",    # MS ゴシック
-    "C:/Windows/Fonts/meiryo.ttc",      # メイリオ
-    "C:/Windows/Fonts/YuGothR.ttc",     # 游ゴシック Regular
-    "C:/Windows/Fonts/YuGothM.ttc",     # 游ゴシック Medium
+    # Windows (太字を優先)
     "C:/Windows/Fonts/YuGothB.ttc",     # 游ゴシック Bold
+    "C:/Windows/Fonts/meiryob.ttc",     # メイリオ Bold
+    "C:/Windows/Fonts/YuGothM.ttc",     # 游ゴシック Medium
+    "C:/Windows/Fonts/meiryo.ttc",      # メイリオ
+    "C:/Windows/Fonts/msgothic.ttc",    # MS ゴシック
+    "C:/Windows/Fonts/YuGothR.ttc",     # 游ゴシック Regular
     # Linux
     "/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf",   # IPA Pゴシック
     "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",     # IPAゴシック
