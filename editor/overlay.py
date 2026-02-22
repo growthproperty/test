@@ -154,36 +154,44 @@ def create_text_overlay(
                 # drawを再取得 (glow合成後)
                 draw = ImageDraw.Draw(img)
 
-            # ドロップシャドウ (太字化に合わせて重ね描き)
-            _bold_extra = getattr(config, "TEXT_BOLD_EXTRA", 0)
-            if _bold_extra > 0:
-                for dx in range(-_bold_extra, _bold_extra + 1):
-                    for dy in range(-_bold_extra, _bold_extra + 1):
-                        draw.text(
-                            (seg_x + offset + dx, y + offset + dy), seg_text, font=font,
-                            fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
-                        )
-            else:
-                draw.text(
-                    (seg_x + offset, y + offset), seg_text, font=font,
-                    fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
-                )
-
-            # 本文を描画 (境界線＝ストローク付き + 重ね描きで太字化)
+            # 黄色テキスト → ゴールドグラデーションで描画
             bold_extra = getattr(config, "TEXT_BOLD_EXTRA", 0)
-            if bold_extra > 0:
-                # 複数方向にオフセットして描画し、文字を太くする
-                for dx in range(-bold_extra, bold_extra + 1):
-                    for dy in range(-bold_extra, bold_extra + 1):
-                        draw.text(
-                            (seg_x + dx, y + dy), seg_text, font=font,
-                            fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
-                        )
-            else:
-                draw.text(
-                    (seg_x, y), seg_text, font=font,
-                    fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+            is_yellow_seg = seg_color.lower() == "yellow"
+            if is_yellow_seg:
+                _draw_gold_gradient_text(
+                    img, draw, seg_text, font, seg_x, y,
+                    stroke_w, stroke_color, shadow_rgba, offset, bold_extra,
                 )
+                # drawを再取得 (合成後)
+                draw = ImageDraw.Draw(img)
+            else:
+                # ドロップシャドウ (太字化に合わせて重ね描き)
+                if bold_extra > 0:
+                    for dx in range(-bold_extra, bold_extra + 1):
+                        for dy in range(-bold_extra, bold_extra + 1):
+                            draw.text(
+                                (seg_x + offset + dx, y + offset + dy), seg_text, font=font,
+                                fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+                            )
+                else:
+                    draw.text(
+                        (seg_x + offset, y + offset), seg_text, font=font,
+                        fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+                    )
+
+                # 本文を描画 (境界線＝ストローク付き + 重ね描きで太字化)
+                if bold_extra > 0:
+                    for dx in range(-bold_extra, bold_extra + 1):
+                        for dy in range(-bold_extra, bold_extra + 1):
+                            draw.text(
+                                (seg_x + dx, y + dy), seg_text, font=font,
+                                fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                            )
+                else:
+                    draw.text(
+                        (seg_x, y), seg_text, font=font,
+                        fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                    )
 
             current_x += seg_widths[seg_idx]
 
@@ -228,6 +236,98 @@ def _draw_red_glow(
         Image.new("RGBA", img.size, (0, 0, 0, 0)),
         glow_layer
     ), (0, 0), glow_layer)
+
+
+def _draw_gold_gradient_text(
+    img: Image.Image,
+    draw: ImageDraw.Draw,
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    x: int,
+    y: int,
+    stroke_w: int,
+    stroke_color: tuple,
+    shadow_rgba: tuple,
+    shadow_offset: int,
+    bold_extra: int,
+) -> None:
+    """
+    金色グラデーション (上:明るい黄色 → 下:ダークゴールド) でテキストを描画する。
+    1. ストローク(黒縁)を先に描画
+    2. 白テキストを描画 → そのアルファをマスクにしてグラデーションを合成
+    """
+    top_color = config.YELLOW_GRADIENT_TOP
+    bottom_color = config.YELLOW_GRADIENT_BOTTOM
+
+    # テキストのバウンディングボックスを取得
+    bbox = draw.textbbox((0, 0), text, font=font, stroke_width=stroke_w)
+    text_h = bbox[3] - bbox[1]
+
+    # --- ドロップシャドウ ---
+    if bold_extra > 0:
+        for dx in range(-bold_extra, bold_extra + 1):
+            for dy in range(-bold_extra, bold_extra + 1):
+                draw.text(
+                    (x + shadow_offset + dx, y + shadow_offset + dy), text, font=font,
+                    fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+                )
+    else:
+        draw.text(
+            (x + shadow_offset, y + shadow_offset), text, font=font,
+            fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
+        )
+
+    # --- ストローク (黒縁) のみ描画 ---
+    if bold_extra > 0:
+        for dx in range(-bold_extra, bold_extra + 1):
+            for dy in range(-bold_extra, bold_extra + 1):
+                draw.text(
+                    (x + dx, y + dy), text, font=font,
+                    fill=(0, 0, 0, 0), stroke_width=stroke_w, stroke_fill=stroke_color
+                )
+    else:
+        draw.text(
+            (x, y), text, font=font,
+            fill=(0, 0, 0, 0), stroke_width=stroke_w, stroke_fill=stroke_color
+        )
+
+    # --- グラデーション付きテキストを一時レイヤーに描画 ---
+    # 1. テキスト形状のマスクを作成
+    mask_layer = Image.new("L", img.size, 0)
+    mask_draw = ImageDraw.Draw(mask_layer)
+    if bold_extra > 0:
+        for dx in range(-bold_extra, bold_extra + 1):
+            for dy in range(-bold_extra, bold_extra + 1):
+                mask_draw.text(
+                    (x + dx, y + dy), text, font=font,
+                    fill=255, stroke_width=stroke_w, stroke_fill=0
+                )
+    else:
+        mask_draw.text(
+            (x, y), text, font=font,
+            fill=255, stroke_width=stroke_w, stroke_fill=0
+        )
+
+    # 2. 縦方向グラデーション画像を作成 (1px幅 → 横に引き伸ばし)
+    grad_strip = Image.new("RGB", (1, max(text_h, 1)))
+    for row in range(text_h):
+        t = row / max(text_h - 1, 1)
+        r = int(top_color[0] + (bottom_color[0] - top_color[0]) * t)
+        g = int(top_color[1] + (bottom_color[1] - top_color[1]) * t)
+        b = int(top_color[2] + (bottom_color[2] - top_color[2]) * t)
+        grad_strip.putpixel((0, row), (r, g, b))
+
+    grad_full = grad_strip.resize(img.size, Image.BILINEAR)
+
+    # Y位置に合わせてグラデーションをシフト (テキスト上端=明るい色)
+    shifted = Image.new("RGB", img.size, bottom_color)
+    shifted.paste(grad_full.crop((0, 0, img.size[0], img.size[1] - y)), (0, y))
+
+    # 3. マスクでグラデーションを切り抜いてRGBAに変換し合成
+    grad_rgba = shifted.copy().convert("RGBA")
+    grad_rgba.putalpha(mask_layer)
+
+    img.paste(Image.alpha_composite(Image.new("RGBA", img.size, (0, 0, 0, 0)), grad_rgba), (0, 0), grad_rgba)
 
 
 def create_logo_overlay(

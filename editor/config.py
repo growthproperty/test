@@ -52,6 +52,10 @@ TEXT_STROKE_WIDTH = 25
 TEXT_BOLD_EXTRA = 3
 TEXT_STROKE_COLOR = (0, 0, 0, 255)
 
+# === 黄色 (ゴールドグラデーション) エフェクト ===
+YELLOW_GRADIENT_TOP = (255, 245, 50)      # 上部: 鮮やかなイエロー
+YELLOW_GRADIENT_BOTTOM = (210, 150, 0)    # 下部: リッチゴールド
+
 # === 赤エフェクトテキスト ===
 # 赤い文字にグロー（光彩）エフェクトを適用
 RED_EFFECT_COLOR = (255, 0, 0, 255)
