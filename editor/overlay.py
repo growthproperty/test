@@ -128,16 +128,19 @@ def create_text_overlay(
         # インラインカラータグを解析してセグメントに分割
         segments = _parse_inline_colors(text, default_color)
 
-        # 各セグメントの幅を計測
+        # 各セグメントの幅とbbox左オフセットを計測
         seg_widths = []
+        seg_left_offsets = []
         for seg in segments:
             bbox = draw.textbbox(
                 (0, 0), seg["text"], font=font, stroke_width=stroke_w
             )
             seg_widths.append(bbox[2] - bbox[0])
+            seg_left_offsets.append(bbox[0])
 
         total_w = sum(seg_widths)
-        current_x = (w - total_w) // 2
+        # bbox[0]のオフセットを補正して正確に中央配置
+        current_x = (w - total_w) // 2 - seg_left_offsets[0]
         y = y_positions[i] if i < len(y_positions) else y_positions[-1] + config.TEXT_LINE_SPACING * (i - len(y_positions) + 1)
 
         # セグメントごとに描画
