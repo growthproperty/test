@@ -12,6 +12,45 @@ def _load_font(size: int, prefer_latin: bool = False) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(font_path, size)
 
 
+def _calc_pixel_centered_x(
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    canvas_w: int,
+    stroke_w: int,
+    bold_extra: int,
+) -> int:
+    """
+    テキストを仮レンダリングし、実際のピクセル範囲 (getbbox) から
+    キャンバス中央に配置するためのX座標を計算する。
+    textbboxの理論値ではなく実ピクセルに基づくため、より正確。
+    """
+    temp_w = canvas_w * 2
+    temp = Image.new("L", (temp_w, 200), 0)
+    td = ImageDraw.Draw(temp)
+    ref_x = canvas_w
+
+    # テキスト + ストローク + 太字化をレンダリング (シャドウは含めない)
+    if bold_extra > 0:
+        for dx in range(-bold_extra, bold_extra + 1):
+            for dy in range(-bold_extra, bold_extra + 1):
+                td.text(
+                    (ref_x + dx, 50 + dy), text, font=font,
+                    fill=255, stroke_width=stroke_w, stroke_fill=255,
+                )
+    else:
+        td.text(
+            (ref_x, 50), text, font=font,
+            fill=255, stroke_width=stroke_w, stroke_fill=255,
+        )
+
+    bbox = temp.getbbox()
+    if bbox is None:
+        return (canvas_w - int(font.getlength(text))) // 2
+
+    pixel_center = (bbox[0] + bbox[2]) / 2 - ref_x
+    return round(canvas_w / 2 - pixel_center)
+
+
 def _parse_inline_colors(text: str, default_color: str) -> list[dict]:
     """
     インラインカラータグを解析してセグメントに分割する。
@@ -128,19 +167,17 @@ def create_text_overlay(
         # インラインカラータグを解析してセグメントに分割
         segments = _parse_inline_colors(text, default_color)
 
-        # 各セグメントの幅とbbox左オフセットを計測
+        # 各セグメントの幅を計測 (textlength = アドバンス幅)
         seg_widths = []
-        seg_left_offsets = []
         for seg in segments:
-            bbox = draw.textbbox(
-                (0, 0), seg["text"], font=font, stroke_width=stroke_w
-            )
-            seg_widths.append(bbox[2] - bbox[0])
-            seg_left_offsets.append(bbox[0])
+            seg_widths.append(font.getlength(seg["text"]))
 
-        total_w = sum(seg_widths)
-        # bbox[0]のオフセットを補正して正確に中央配置
-        current_x = (w - total_w) // 2 - seg_left_offsets[0]
+        # 行全体のテキストを仮レンダリングして実際のピクセル中央を求める
+        bold_extra = getattr(config, "TEXT_BOLD_EXTRA", 0)
+        full_text = "".join(seg["text"] for seg in segments)
+        current_x = _calc_pixel_centered_x(
+            full_text, font, w, stroke_w, bold_extra,
+        )
         y = y_positions[i] if i < len(y_positions) else y_positions[-1] + config.TEXT_LINE_SPACING * (i - len(y_positions) + 1)
 
         # セグメントごとに描画
