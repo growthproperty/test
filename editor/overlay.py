@@ -234,23 +234,14 @@ def create_text_overlay(
                         fill=stroke_color, stroke_width=stroke_w, stroke_fill=stroke_color
                     )
 
-                # Phase 2: フィル — 別レイヤーに reduced bold_extra で描画し合成
-                # bold_extra を小さくすることで中・す等のカウンター潰れを防止
-                fill_bold = min(1, bold_extra)
+                # Phase 2: フィル — 別レイヤーに単一描画し合成
+                # 重ね描きなしで中・す等のカウンター潰れを完全に防止
                 fill_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
                 fill_draw = ImageDraw.Draw(fill_layer)
-                if fill_bold > 0:
-                    for dx in range(-fill_bold, fill_bold + 1):
-                        for dy in range(-fill_bold, fill_bold + 1):
-                            fill_draw.text(
-                                (seg_x + dx, y + dy), seg_text, font=font,
-                                fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
-                            )
-                else:
-                    fill_draw.text(
-                        (seg_x, y), seg_text, font=font,
-                        fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
-                    )
+                fill_draw.text(
+                    (seg_x, y), seg_text, font=font,
+                    fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                )
                 img = Image.alpha_composite(img, fill_layer)
                 draw = ImageDraw.Draw(img)
 
@@ -354,22 +345,13 @@ def _draw_gold_gradient_text(
         )
 
     # --- グラデーション付きテキストを一時レイヤーに描画 ---
-    # 1. テキスト形状のマスクを作成 (reduced bold_extra でカウンター保持)
-    fill_bold = min(1, bold_extra)
+    # 1. テキスト形状のマスクを作成 (単一描画でカウンター保持)
     mask_layer = Image.new("L", img.size, 0)
     mask_draw = ImageDraw.Draw(mask_layer)
-    if fill_bold > 0:
-        for dx in range(-fill_bold, fill_bold + 1):
-            for dy in range(-fill_bold, fill_bold + 1):
-                mask_draw.text(
-                    (x + dx, y + dy), text, font=font,
-                    fill=255, stroke_width=stroke_w, stroke_fill=0
-                )
-    else:
-        mask_draw.text(
-            (x, y), text, font=font,
-            fill=255, stroke_width=stroke_w, stroke_fill=0
-        )
+    mask_draw.text(
+        (x, y), text, font=font,
+        fill=255, stroke_width=stroke_w, stroke_fill=0
+    )
 
     # 2. 縦方向グラデーション画像を作成 (1px幅 → 横に引き伸ばし)
     grad_strip = Image.new("RGB", (1, max(text_h, 1)))
