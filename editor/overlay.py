@@ -1,7 +1,7 @@
 """テキスト・画像オーバーレイ生成モジュール"""
 
 import re
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 import os
 from . import config
 
@@ -49,6 +49,40 @@ def _calc_pixel_centered_x(
 
     pixel_center = (bbox[0] + bbox[2]) / 2 - ref_x
     return round(canvas_w / 2 - pixel_center)
+
+
+def _get_internal_spaces_mask(
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    x: int,
+    y: int,
+    bold_extra: int,
+    canvas_size: tuple[int, int],
+) -> Image.Image:
+    """
+    文字の内部空間（例: 国の囗の中、園の口の中）のマスクを返す。
+
+    太いストローク(stroke_width)が文字内部にまで浸食して
+    内部構造が潰れる問題を修正するために使用する。
+    テキストをストロークなしで描画し、フラッドフィルで外側背景を除去して
+    残った内部空間のみのマスクを得る。
+    """
+    w, h = canvas_size
+    # テキストのグリフマスク (ストロークなし)
+    text_mask = Image.new("L", (w, h), 0)
+    td = ImageDraw.Draw(text_mask)
+    if bold_extra > 0:
+        for dx in range(-bold_extra, bold_extra + 1):
+            for dy in range(-bold_extra, bold_extra + 1):
+                td.text((x + dx, y + dy), text, font=font, fill=255)
+    else:
+        td.text((x, y), text, font=font, fill=255)
+
+    # text_maskを反転 → テキスト部分=0, 背景+内部空間=255
+    internal = Image.eval(text_mask, lambda v: 255 - v)
+    # 外側背景(0,0から到達可能)をフラッドフィルで消去 → 残るのは内部空間のみ
+    ImageDraw.floodfill(internal, (0, 0), 0, thresh=1)
+    return internal
 
 
 def _parse_inline_colors(text: str, default_color: str) -> list[dict]:
@@ -233,6 +267,16 @@ def create_text_overlay(
                         fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
                     )
 
+                # 文字内部空間をfill_colorで復元 (国・園等の内部が潰れる問題の修正)
+                internal = _get_internal_spaces_mask(
+                    seg_text, font, seg_x, y, bold_extra, img.size,
+                )
+                if internal.getbbox():
+                    fill_layer = Image.new("RGBA", img.size, seg_rgba)
+                    fill_layer.putalpha(internal)
+                    img = Image.alpha_composite(img, fill_layer)
+                    draw = ImageDraw.Draw(img)
+
             current_x += seg_widths[seg_idx]
 
     return img
@@ -347,6 +391,10 @@ def _draw_gold_gradient_text(
             (x, y), text, font=font,
             fill=255, stroke_width=stroke_w, stroke_fill=0
         )
+
+    # 1b. 文字内部空間もマスクに追加 (国・園等の内部が潰れる問題の修正)
+    internal = _get_internal_spaces_mask(text, font, x, y, bold_extra, img.size)
+    mask_layer = ImageChops.add(mask_layer, internal)
 
     # 2. 縦方向グラデーション画像を作成 (1px幅 → 横に引き伸ばし)
     grad_strip = Image.new("RGB", (1, max(text_h, 1)))
