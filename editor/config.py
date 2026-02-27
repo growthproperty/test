@@ -47,7 +47,7 @@ TEXT_SHADOW_OFFSET = 5
 TEXT_SHADOW_COLOR = (0, 0, 0, 200)
 
 # テキストの境界線（ストローク） - 黒い太い縁取り
-TEXT_STROKE_WIDTH = 20
+TEXT_STROKE_WIDTH = 15
 # 文字を太くする追加オフセット描画の範囲 (0=無効)
 TEXT_BOLD_EXTRA = 3
 TEXT_STROKE_COLOR = (0, 0, 0, 255)
