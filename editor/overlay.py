@@ -219,19 +219,40 @@ def create_text_overlay(
                         fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
                     )
 
-                # 本文を描画 (境界線＝ストローク付き + 重ね描きで太字化)
+                # 本文を描画 (ストロークとフィルを分離して文字内部構造を保持)
+                # Phase 1: ストローク (黒縁) — full bold_extra で太い輪郭を描画
                 if bold_extra > 0:
                     for dx in range(-bold_extra, bold_extra + 1):
                         for dy in range(-bold_extra, bold_extra + 1):
                             draw.text(
                                 (seg_x + dx, y + dy), seg_text, font=font,
-                                fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                                fill=stroke_color, stroke_width=stroke_w, stroke_fill=stroke_color
                             )
                 else:
                     draw.text(
                         (seg_x, y), seg_text, font=font,
+                        fill=stroke_color, stroke_width=stroke_w, stroke_fill=stroke_color
+                    )
+
+                # Phase 2: フィル — 別レイヤーに reduced bold_extra で描画し合成
+                # bold_extra を小さくすることで中・す等のカウンター潰れを防止
+                fill_bold = min(1, bold_extra)
+                fill_layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+                fill_draw = ImageDraw.Draw(fill_layer)
+                if fill_bold > 0:
+                    for dx in range(-fill_bold, fill_bold + 1):
+                        for dy in range(-fill_bold, fill_bold + 1):
+                            fill_draw.text(
+                                (seg_x + dx, y + dy), seg_text, font=font,
+                                fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
+                            )
+                else:
+                    fill_draw.text(
+                        (seg_x, y), seg_text, font=font,
                         fill=seg_rgba, stroke_width=stroke_w, stroke_fill=stroke_color
                     )
+                img = Image.alpha_composite(img, fill_layer)
+                draw = ImageDraw.Draw(img)
 
 
             current_x += seg_widths[seg_idx]
@@ -318,27 +339,28 @@ def _draw_gold_gradient_text(
             fill=shadow_rgba, stroke_width=stroke_w, stroke_fill=shadow_rgba
         )
 
-    # --- ストローク (黒縁) のみ描画 ---
+    # --- ストローク (黒縁) のみ描画 (full bold_extra) ---
     if bold_extra > 0:
         for dx in range(-bold_extra, bold_extra + 1):
             for dy in range(-bold_extra, bold_extra + 1):
                 draw.text(
                     (x + dx, y + dy), text, font=font,
-                    fill=(0, 0, 0, 0), stroke_width=stroke_w, stroke_fill=stroke_color
+                    fill=stroke_color, stroke_width=stroke_w, stroke_fill=stroke_color
                 )
     else:
         draw.text(
             (x, y), text, font=font,
-            fill=(0, 0, 0, 0), stroke_width=stroke_w, stroke_fill=stroke_color
+            fill=stroke_color, stroke_width=stroke_w, stroke_fill=stroke_color
         )
 
     # --- グラデーション付きテキストを一時レイヤーに描画 ---
-    # 1. テキスト形状のマスクを作成
+    # 1. テキスト形状のマスクを作成 (reduced bold_extra でカウンター保持)
+    fill_bold = min(1, bold_extra)
     mask_layer = Image.new("L", img.size, 0)
     mask_draw = ImageDraw.Draw(mask_layer)
-    if bold_extra > 0:
-        for dx in range(-bold_extra, bold_extra + 1):
-            for dy in range(-bold_extra, bold_extra + 1):
+    if fill_bold > 0:
+        for dx in range(-fill_bold, fill_bold + 1):
+            for dy in range(-fill_bold, fill_bold + 1):
                 mask_draw.text(
                     (x + dx, y + dy), text, font=font,
                     fill=255, stroke_width=stroke_w, stroke_fill=0
